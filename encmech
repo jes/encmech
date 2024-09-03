@@ -15,4 +15,13 @@ get '/' => sub {
     return $c->render('index');
 };
 
+get '/content' => sub {
+    my ($c) = shift;
+    my $q = $c->param('q');
+    return $c->render('index') if !$q;
+
+    $c->stash(page => EncMech::retrieve($q));
+    return $c->render('content');
+};
+
 app->start;

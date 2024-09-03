@@ -48,25 +48,70 @@
         .search-results {
             width: 100%;
         }
+        .loading {
+            font-size: 24px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .loading span {
+            display: inline-block;
+            animation: blink 1.4s infinite both;
+            font-size: 48px; /* Increased dot size */
+        }
+        .loading span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .loading span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes blink {
+            0%, 20%, 50%, 80%, 100% {
+                opacity: 1;
+            }
+            40% {
+                opacity: 0;
+            }
+            60% {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Encyclopedia Mechanica</h1>
 
-        <form method="get" action="/">
+        <form id="search-form">
             <input id="q" name="q" type="text" placeholder="Enter your search query">
             <button type="submit">Search</button>
         </form>
 
-        % use Mojo::DOM;
-        % use Text::Markdown qw(markdown);
-
-        % if (stash 'page') {
-            <div class="search-results">
-                <%== markdown(stash 'page') %>
-            </div>
-        % }
+        <div id="content">
+        </div>
     </div>
+
+    <script>
+        document.getElementById('search-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const query = document.getElementById('q').value.trim();
+            if (query) {
+                fetchContent(query);
+            } else {
+                document.getElementById('content').innerHTML = '';
+            }
+        });
+
+        function fetchContent(query) {
+            document.getElementById('content').innerHTML = '<div class="loading"><span>.</span><span>.</span><span>.</span></div>';
+            fetch(`/content?q=${encodeURIComponent(query)}`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('content').innerHTML = data;
+                })
+                .catch(error => {
+                    document.getElementById('content').innerHTML = '<p>Error loading content</p>';
+                });
+        }
+    </script>
 </body>
 </html>

@@ -1,0 +1,4 @@
+% use Text::Markdown qw(markdown);
+% if (stash 'page') {
+    <%== markdown(stash 'page') %>
+% }
