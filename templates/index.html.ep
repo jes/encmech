@@ -91,13 +91,23 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fragment = window.location.hash.substring(1);
+            if (fragment) {
+                fetchContent(fragment);
+                document.getElementById('q').value = fragment;
+            }
+        });
+
         document.getElementById('search-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const query = document.getElementById('q').value.trim();
             if (query) {
+                window.location.hash = query;
                 fetchContent(query);
             } else {
                 document.getElementById('content').innerHTML = '';
+                window.location.hash = '';
             }
         });
 
