@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+
+use Mojolicious::Lite;
+
+use lib 'lib';
+
+use EncMech;
+
+get '/' => sub {
+    my ($c) = shift;
+    my $q = $c->param('q');
+    return $c->render('index') if !$q;
+
+    $c->stash(page => EncMech::retrieve($q));
+    return $c->render('index');
+};
+
+app->start;

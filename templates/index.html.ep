@@ -1,0 +1,8 @@
+<form method="get" action="/">
+<label for="q">Search:</label> <input id="q" name="q" type="text">
+<button type="submit">Search</button>
+</form>
+
+% if (stash 'page') {
+%= stash 'page';
+% }
