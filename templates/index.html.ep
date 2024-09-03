@@ -9,35 +9,33 @@
             font-family: Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+            padding: 0;
+            background-color: white;
+            font-size: 18px; /* Increased base font size */
         }
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
+            width: 100%;
             padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
         }
         h1 {
             color: #333;
-            text-align: center;
         }
         form {
             display: flex;
             margin-bottom: 20px;
+            width: 100%;
         }
         input[type="text"] {
             flex-grow: 1;
             padding: 10px;
-            font-size: 16px;
+            font-size: 18px; /* Increased input font size */
             border: 1px solid #ddd;
             border-radius: 4px 0 0 4px;
         }
         button {
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 18px; /* Increased button font size */
             background-color: #4CAF50;
             color: white;
             border: none;
@@ -46,6 +44,9 @@
         }
         button:hover {
             background-color: #45a049;
+        }
+        .search-results {
+            width: 100%;
         }
     </style>
 </head>
