@@ -12,10 +12,11 @@ use JSON qw(encode_json decode_json);
 my $DBH;
 sub db {
     return $DBH if $DBH && $DBH->ping;
-    $DBH = DBI->connect("dbi:sqlite:dbname=encmech.db", "", "", {
+    $DBH = DBI->connect("dbi:SQLite:dbname=encmech.db", "", "", {
         RaiseError => 1,
         AutoCommit => 1,
     }) or die $DBI::errstr;
+    $DBH->do(qq{CREATE TABLE IF NOT EXISTS pages (query TEXT PRIMARY KEY, content TEXT)});
     return $DBH;
 }
 
@@ -26,10 +27,10 @@ sub retrieve {
 
     my $result = $dbh->selectrow_arrayref(qq{SELECT content FROM pages WHERE query=?},
         {Slice => {}}, $q);
-    return $result->{content} if $result;
+    return $result->[0] if $result;
 
     my $content = generate($q);
-    $dbh->do(qq{INSERT INTO paegs (query, content) VALUES (?, ?)}, undef, $q, $content);
+    $dbh->do(qq{INSERT INTO pages (query, content) VALUES (?, ?)}, undef, $q, $content);
     return $content;
 }
 
