@@ -1,8 +1,71 @@
-<form method="get" action="/">
-<label for="q">Search:</label> <input id="q" name="q" type="text">
-<button type="submit">Search</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encyclopedia Mechanica</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Encyclopedia Mechanica</h1>
 
-% if (stash 'page') {
-%= stash 'page';
-% }
+        <form method="get" action="/">
+            <input id="q" name="q" type="text" placeholder="Enter your search query">
+            <button type="submit">Search</button>
+        </form>
+
+        % use Mojo::DOM;
+        % use Text::Markdown qw(markdown);
+
+        % if (stash 'page') {
+            <div class="search-results">
+                <%== markdown(stash 'page') %>
+            </div>
+        % }
+    </div>
+</body>
+</html>
