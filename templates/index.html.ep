@@ -80,6 +80,8 @@
 <body>
     <div class="container">
         <h1>Encyclopedia Mechanica</h1>
+        <h3><i>Omni quaestioni responsum</i></h3>
+        <p>Encyclopedia Mechanica generates encyclopedia pages on-demand in response to queries.</p>
 
         <form id="search-form">
             <input id="q" name="q" type="text" placeholder="Enter your search query">
@@ -95,7 +97,7 @@
             const fragment = window.location.hash.substring(1);
             if (fragment) {
                 fetchContent(fragment);
-                document.getElementById('q').value = fragment;
+                document.getElementById('q').value = decodeURIComponent(fragment);
             }
         });
 
@@ -113,7 +115,7 @@
 
         function fetchContent(query) {
             document.getElementById('content').innerHTML = '<div class="loading"><span>.</span><span>.</span><span>.</span></div>';
-            fetch(`/content?q=${encodeURIComponent(query)}`)
+            fetch(`/encmech/content?q=${encodeURIComponent(query)}`)
                 .then(response => response.text())
                 .then(data => {
                     document.getElementById('content').innerHTML = data;

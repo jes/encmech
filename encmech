@@ -5,23 +5,30 @@ use Mojolicious::Lite;
 use lib 'lib';
 
 use EncMech;
+use URI::Escape;
 
-get '/' => sub {
+get '/encmech/' => sub {
     my ($c) = shift;
     my $q = $c->param('q');
     return $c->render('index') if !$q;
+
+    $q = uri_unescape($q);
 
     $c->stash(page => EncMech::retrieve($q));
     return $c->render('index');
 };
 
-get '/content' => sub {
+get '/encmech/content' => sub {
     my ($c) = shift;
     my $q = $c->param('q');
     return $c->render('index') if !$q;
 
+    $q = uri_unescape($q);
+
     $c->stash(page => EncMech::retrieve($q));
     return $c->render('content');
 };
+
+app->config(hypnotoad => {listen => ["http://*:9876"], workers => 2});
 
 app->start;
