@@ -40,6 +40,7 @@ sub generate {
     -f 'key' or die "Please put your OpenAI API key in a file called 'key'";
     my $key = read_file("key");
     my $system = read_file("prompt");
+    my $system2 = read_file("prompt2");
     $system =~ s/__TOPIC__/$q/g;
     my $model = "gpt-4o-mini";
 
@@ -61,8 +62,34 @@ sub generate {
     );
     print STDERR $r->decoded_content;
     $r = decode_json($r->decoded_content);
-    return $r->{choices}[0]{message}{content};
+    my $draft = $r->{choices}[0]{message}{content};
 
+    $body = {
+        model => $model,
+        messages => [
+            {
+                role => 'system',
+                content => $system,
+            },
+            {
+                role => 'assistant',
+                content => $draft,
+            },
+            {
+                role => 'system',
+                content => $system2,
+            },
+        ],
+    };
+
+    $r = $ua->post("https://api.openai.com/v1/chat/completions",
+        Authorization => "Bearer $key",
+        'Content-Type' => 'application/json',
+        Content => encode_json($body)
+    );
+    print STDERR $r->decoded_content;
+    $r = decode_json($r->decoded_content);
+    return $r->{choices}[0]{message}{content};
 }
 
 1;

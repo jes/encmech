@@ -18,13 +18,21 @@
             padding: 20px;
             box-sizing: border-box;
         }
+        .header {
+            background-color: #f4f4f4; /* Light grey background for header */
+            padding: 20px;
+            border-bottom: 1px solid #ddd; /* Border to separate header */
+        }
         h1 {
             color: #333;
         }
         form {
             display: flex;
             margin-bottom: 20px;
-            width: 100%;
+            width: auto; /* Changed from 100% to auto */
+            position: absolute;
+            top: 60px; /* Moved further down */
+            right: 20px;
         }
         input[type="text"] {
             flex-grow: 1;
@@ -32,6 +40,7 @@
             font-size: 18px; /* Increased input font size */
             border: 1px solid #ddd;
             border-radius: 4px 0 0 4px;
+            width: 200px; /* Set a fixed width */
         }
         button {
             padding: 10px 20px;
@@ -78,11 +87,12 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="header">
         <h1>Encyclopedia Mechanica</h1>
         <h3><i>Omni quaestioni responsum</i></h3>
         <p>Encyclopedia Mechanica generates encyclopedia pages on-demand in response to queries.</p>
-
+    </div>
+    <div class="container">
         <form id="search-form">
             <input id="q" name="q" type="text" placeholder="Enter your search query">
             <button type="submit">Search</button>
@@ -119,10 +129,23 @@
                 .then(response => response.text())
                 .then(data => {
                     document.getElementById('content').innerHTML = data;
+                    addLinkListeners();
                 })
                 .catch(error => {
                     document.getElementById('content').innerHTML = '<p>Error loading content</p>';
                 });
+        }
+
+        function addLinkListeners() {
+            const links = document.querySelectorAll('#content a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const fragment = this.getAttribute('href').substring(1);
+                    window.location.hash = fragment;
+                    fetchContent(fragment);
+                });
+            });
         }
     </script>
 </body>

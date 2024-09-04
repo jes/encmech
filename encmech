@@ -7,12 +7,25 @@ use lib 'lib';
 use EncMech;
 use URI::Escape;
 
+sub canon {
+    my ($q) = @_;
+    $q = lc $q;
+    $q = uri_unescape($q);
+    $q =~ s/_/ /g;
+    $q =~ s/</(/g;
+    $q =~ s/>/)/g;
+    $q =~ s/^\s*//;
+    $q =~ s/\s*$//;
+    $q =~ s/\s+/ /g;
+    return $q;
+}
+
 get '/encmech/' => sub {
     my ($c) = shift;
     my $q = $c->param('q');
     return $c->render('index') if !$q;
 
-    $q = uri_unescape($q);
+    $q = canon($q);
 
     $c->stash(page => EncMech::retrieve($q));
     return $c->render('index');
@@ -23,7 +36,7 @@ get '/encmech/content' => sub {
     my $q = $c->param('q');
     return $c->render('index') if !$q;
 
-    $q = uri_unescape($q);
+    $q = canon($q);
 
     $c->stash(page => EncMech::retrieve($q));
     return $c->render('content');
