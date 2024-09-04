@@ -16,7 +16,7 @@ sub db {
         RaiseError => 1,
         AutoCommit => 1,
     }) or die $DBI::errstr;
-    $DBH->do(qq{CREATE TABLE IF NOT EXISTS pages (query TEXT PRIMARY KEY, content TEXT)});
+    $DBH->do(qq{CREATE TABLE IF NOT EXISTS pages (query TEXT PRIMARY KEY, content TEXT, created TIMESTAMP)});
     return $DBH;
 }
 
@@ -30,7 +30,7 @@ sub retrieve {
     return $result->[0] if $result;
 
     my $content = generate($q);
-    $dbh->do(qq{INSERT INTO pages (query, content) VALUES (?, ?)}, undef, $q, $content);
+    $dbh->do(qq{INSERT INTO pages (query, content, created) VALUES (?, ?, CURRENT_TIMESTAMP)}, undef, $q, $content);
     return $content;
 }
 
