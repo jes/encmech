@@ -84,6 +84,13 @@
                 opacity: 0;
             }
         }
+        @media (max-width: 800px) {
+            form {
+                position: static; /* Remove absolute positioning */
+                width: 100%; /* Full width */
+                margin-top: 20px; /* Add some margin at the top */
+            }
+        }
     </style>
 </head>
 <body>
