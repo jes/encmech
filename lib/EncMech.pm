@@ -114,7 +114,7 @@ sub make_api_request {
                 }
                 try {
                     my $decoded_chunk = decode_json($data);
-                    if ($decoded_chunk->{choices}[0]{delta}{content}) {
+                    if (exists $decoded_chunk->{choices}[0]{delta}{content}) {
                         $content .= $decoded_chunk->{choices}[0]{delta}{content};
                         $pipe->print(encode_json({content => $content, finished => 0}) . "\n");
                         $pipe->flush();
