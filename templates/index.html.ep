@@ -191,9 +191,6 @@
                         }
                     });
                 })
-                .then(() => {
-                    addLinkListeners();
-                })
                 .catch(error => {
                     if (error.name !== 'AbortError') {
                         document.getElementById('content').innerHTML = '<p>Error loading content</p>';
@@ -205,21 +202,18 @@
         function processStreamedContent(htmlContent) {
             const contentElement = document.getElementById('content');
             contentElement.innerHTML = htmlContent;
-            addLinkListeners();
         }
 
-        function addLinkListeners() {
-            const links = document.querySelectorAll('#content a[href^="#"]');
-            links.forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    console.log("clicked " + this.getAttribute('href'));
-                    const fragment = this.getAttribute('href').substring(1);
-                    window.location.hash = fragment;
-                    fetchContent(fragment);
-                });
-            });
-        }
+        // Add this event listener to handle link clicks
+        document.getElementById('content').addEventListener('click', function(event) {
+            const link = event.target.closest('a[href^="#"]');
+            if (link) {
+                event.preventDefault();
+                const fragment = link.getAttribute('href').substring(1);
+                window.location.hash = fragment;
+                fetchContent(fragment);
+            }
+        });
     </script>
 </body>
 </html>
