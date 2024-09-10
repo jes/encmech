@@ -15,10 +15,9 @@ use AnyEvent;
 use AnyEvent::Handle;
 
 my $ua = LWP::UserAgent->new;
-my $CONTENT = '';
-my $PIPE_HANDLE;
-my $PIPE;
 my $DBH;
+
+my %PIPE_HANDLES;
 
 sub db {
     return $DBH if $DBH && $DBH->ping;
@@ -53,7 +52,6 @@ sub retrieve {
 
 sub generate {
     my ($q, $cb) = @_;
-    $CONTENT = '';
 
     my $key = read_file("key");
     chomp $key;
@@ -62,31 +60,31 @@ sub generate {
     $system =~ s/__TOPIC__/$q/g;
     my $model = "gpt-4o-mini";
 
-    $PIPE = IO::Pipe->new();
+    my $pipe = IO::Pipe->new();
     my $pid = fork();
 
     if ($pid == 0) {
         # Child process
-        $PIPE->writer();
+        $pipe->writer();
         
         # First request
-        make_api_request($PIPE, $key, $model, [
+        my $content = make_api_request($pipe, $key, $model, [
             { role => 'system', content => $system },
         ]);
 
         # Second request
-        make_api_request($PIPE, $key, $model, [
+        my $final_content = make_api_request($pipe, $key, $model, [
             { role => 'system', content => $system },
-            { role => 'assistant', content => $CONTENT },
+            { role => 'assistant', content => $content },
             { role => 'system', content => $system2 },
         ]);
 
-        $PIPE->print(encode_json({content => $CONTENT, finished => 1}) . "\n");
-        $PIPE->close();
+        $pipe->print(encode_json({content => $final_content, finished => 1}) . "\n");
+        $pipe->close();
         exit 0;
     } else {
         # Parent process
-        setup_pipe_reader($PIPE, $cb);
+        setup_pipe_reader($pipe, $cb);
     }
 }
 
@@ -99,7 +97,7 @@ sub make_api_request {
     };
 
     my $buf = '';
-    $CONTENT = '';
+    my $content = '';
 
     my $response = $ua->post(
         "https://api.openai.com/v1/chat/completions",
@@ -117,8 +115,8 @@ sub make_api_request {
                 try {
                     my $decoded_chunk = decode_json($data);
                     if ($decoded_chunk->{choices}[0]{delta}{content}) {
-                        $CONTENT .= $decoded_chunk->{choices}[0]{delta}{content};
-                        $pipe->print(encode_json({content => $CONTENT, finished => 0}) . "\n");
+                        $content .= $decoded_chunk->{choices}[0]{delta}{content};
+                        $pipe->print(encode_json({content => $content, finished => 0}) . "\n");
                         $pipe->flush();
                     }
                 } catch {
@@ -127,6 +125,8 @@ sub make_api_request {
             }
         },
     );
+
+    return $content;
 }
 
 sub setup_pipe_reader {
@@ -135,7 +135,7 @@ sub setup_pipe_reader {
 
     my $content = '';
     
-    $PIPE_HANDLE = AnyEvent::Handle->new(
+    $PIPE_HANDLES{$pipe} = AnyEvent::Handle->new(
         fh => $pipe,
         on_read => sub {
             my ($handle) = @_;
@@ -163,10 +163,10 @@ sub setup_pipe_reader {
         on_error => sub {
             my ($handle, $fatal, $msg) = @_;
             warn "Error reading from pipe: $msg";
-            undef $PIPE_HANDLE;  # Clean up the handle
+            delete $PIPE_HANDLES{$pipe};
         },
         on_eof => sub {
-            undef $PIPE_HANDLE;  # Clean up the handle
+            delete $PIPE_HANDLES{$pipe};
         },
     );
 }
