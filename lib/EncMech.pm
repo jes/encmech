@@ -151,7 +151,7 @@ sub setup_pipe_reader {
                     $sendcontent = $content;
                     while ($newcontent =~ /\[([^\]]+)\]\(#([^\)]+)\)/g) {
                         my ($text, $url) = ($1, $2);
-                        $sendcontent =~ s/\Q$text\E(?!\]\()/[$text](#$url)/g;
+                        $sendcontent =~ s/\Q$text\E(?!\]\()(?![^\[]*\])/[$text](#$url)/g;
                     }
                 } else {
                     $content = $newcontent;
