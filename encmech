@@ -39,6 +39,8 @@ get '/encmech/content' => sub {
     EncMech::retrieve($q, sub {
         my ($page, $finished) = @_;
 
+        return if !$c->tx;
+
         $c->write(encode_json({content => markdown($page)})."\n");
 
         $c->finish if $finished;
