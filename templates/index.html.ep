@@ -115,6 +115,11 @@
             if (fragment) {
                 fetchContent(fragment);
                 document.getElementById('q').value = decodeURIComponent(fragment);
+            } else {
+                // If there's no fragment, navigate to "#list of example pages"
+                window.location.hash = "list of example pages";
+                fetchContent("list of example pages");
+                document.getElementById('q').value = "list of example pages";
             }
         });
 
