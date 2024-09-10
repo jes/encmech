@@ -81,7 +81,7 @@ sub generate {
             { role => 'system', content => $system2 },
         ]);
 
-        $PIPE->print(encode_json({content => $CONTENT}) . "\n");
+        $PIPE->print(encode_json({content => $CONTENT, finished => 1}) . "\n");
         $PIPE->close();
         exit 0;
     } else {
@@ -118,7 +118,7 @@ sub make_api_request {
                     my $decoded_chunk = decode_json($data);
                     if ($decoded_chunk->{choices}[0]{delta}{content}) {
                         $CONTENT .= $decoded_chunk->{choices}[0]{delta}{content};
-                        $pipe->print(encode_json({content => $CONTENT}) . "\n");
+                        $pipe->print(encode_json({content => $CONTENT, finished => 0}) . "\n");
                         $pipe->flush();
                     }
                 } catch {
@@ -142,8 +142,22 @@ sub setup_pipe_reader {
             $handle->push_read(line => sub {
                 my ($handle, $line, $eol) = @_;
                 chomp $line;
-                $content = decode_json($line)->{content};
-                $cb->($content, 0);
+                my $decoded = decode_json($line);
+                my $newcontent = $decoded->{content};
+                my $finished = $decoded->{finished};
+                my $sendcontent = $newcontent;
+                if (length($newcontent) < length($content) && !$finished) {
+                    # Extract markdown links from $newcontent
+                    $sendcontent = $content;
+                    while ($newcontent =~ /\[([^\]]+)\]\(#([^\)]+)\)/g) {
+                        my ($text, $url) = ($1, $2);
+                        $sendcontent =~ s/\Q$text\E(?!\]\()/[$text](#$url)/g;
+                    }
+                } else {
+                    $content = $newcontent;
+                }
+
+                $cb->($sendcontent, $finished);
             });
         },
         on_error => sub {
@@ -153,7 +167,6 @@ sub setup_pipe_reader {
         },
         on_eof => sub {
             undef $PIPE_HANDLE;  # Clean up the handle
-            $cb->($content, 1);
         },
     );
 }
