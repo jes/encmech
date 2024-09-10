@@ -130,20 +130,34 @@
             }
         });
 
+        let currentReader = null;
+
         function fetchContent(query) {
+            // Cancel the current reader if it exists
+            if (currentReader) {
+                currentReader.cancel();
+            }
+
             document.getElementById('content').innerHTML = '<div class="loading"><span>.</span><span>.</span><span>.</span></div>';
+
             fetch(`/encmech/content?q=${encodeURIComponent(query)}`)
                 .then(response => {
                     const reader = response.body.getReader();
+                    currentReader = reader;
                     const decoder = new TextDecoder();
                     let buffer = '';
 
                     return new ReadableStream({
                         start(controller) {
                             function push() {
+                                if (reader != currentReader) {
+                                    console.log('cancelled');
+                                    return;
+                                }
                                 reader.read().then(({ done, value }) => {
                                     if (done) {
                                         controller.close();
+                                        currentReader = null;
                                         return;
                                     }
                                     const chunk = decoder.decode(value, { stream: true });
@@ -164,6 +178,13 @@
                                     
                                     controller.enqueue(value);
                                     push();
+                                }).catch(error => {
+                                    if (error.name === 'AbortError') {
+                                        console.log('Stream reading cancelled');
+                                    } else {
+                                        console.error('Stream reading error:', error);
+                                    }
+                                    controller.error(error);
                                 });
                             }
                             push();
@@ -174,13 +195,17 @@
                     addLinkListeners();
                 })
                 .catch(error => {
-                    document.getElementById('content').innerHTML = '<p>Error loading content</p>';
+                    if (error.name !== 'AbortError') {
+                        document.getElementById('content').innerHTML = '<p>Error loading content</p>';
+                        console.error('Fetch error:', error);
+                    }
                 });
         }
 
         function processStreamedContent(htmlContent) {
             const contentElement = document.getElementById('content');
             contentElement.innerHTML = htmlContent;
+            addLinkListeners();
         }
 
         function addLinkListeners() {
@@ -188,6 +213,7 @@
             links.forEach(link => {
                 link.addEventListener('click', function(event) {
                     event.preventDefault();
+                    console.log("clicked " + this.getAttribute('href'));
                     const fragment = this.getAttribute('href').substring(1);
                     window.location.hash = fragment;
                     fetchContent(fragment);
