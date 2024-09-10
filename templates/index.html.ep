@@ -133,14 +133,54 @@
         function fetchContent(query) {
             document.getElementById('content').innerHTML = '<div class="loading"><span>.</span><span>.</span><span>.</span></div>';
             fetch(`/encmech/content?q=${encodeURIComponent(query)}`)
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('content').innerHTML = data;
+                .then(response => {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    return new ReadableStream({
+                        start(controller) {
+                            function push() {
+                                reader.read().then(({ done, value }) => {
+                                    if (done) {
+                                        controller.close();
+                                        return;
+                                    }
+                                    const chunk = decoder.decode(value, { stream: true });
+                                    buffer += chunk;
+                                    const lines = buffer.split('\n');
+                                    buffer = lines.pop(); // Keep the last incomplete line in the buffer
+                                    
+                                    for (const line of lines) {
+                                        if (line.trim()) {
+                                            try {
+                                                const jsonData = JSON.parse(line);
+                                                processStreamedContent(jsonData.content);
+                                            } catch (e) {
+                                                console.error('Error parsing JSON:', e);
+                                            }
+                                        }
+                                    }
+                                    
+                                    controller.enqueue(value);
+                                    push();
+                                });
+                            }
+                            push();
+                        }
+                    });
+                })
+                .then(() => {
                     addLinkListeners();
                 })
                 .catch(error => {
                     document.getElementById('content').innerHTML = '<p>Error loading content</p>';
                 });
+        }
+
+        function processStreamedContent(htmlContent) {
+            const contentElement = document.getElementById('content');
+            contentElement.innerHTML = htmlContent;
         }
 
         function addLinkListeners() {

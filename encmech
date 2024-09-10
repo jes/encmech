@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 
 use Mojolicious::Lite;
+use JSON qw(encode_json);
+use Text::Markdown qw(markdown);
 
 use lib 'lib';
 
@@ -22,24 +24,25 @@ sub canon {
 
 get '/encmech/' => sub {
     my ($c) = shift;
-    my $q = $c->param('q');
-    return $c->render('index') if !$q;
-
-    $q = canon($q);
-
-    $c->stash(page => EncMech::retrieve($q));
     return $c->render('index');
 };
 
 get '/encmech/content' => sub {
-    my ($c) = shift;
+    my $c = shift;
     my $q = $c->param('q');
     return $c->render('index') if !$q;
 
     $q = canon($q);
 
-    $c->stash(page => EncMech::retrieve($q));
-    return $c->render('content');
+    $c->render_later;
+
+    EncMech::retrieve($q, sub {
+        my ($page, $finished) = @_;
+
+        $c->write(encode_json({content => markdown($page)})."\n");
+
+        $c->finish if $finished;
+    });
 };
 
 app->config(hypnotoad => {listen => ["http://*:9876"], workers => 2});
