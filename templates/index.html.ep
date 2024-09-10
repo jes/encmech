@@ -204,10 +204,10 @@
             contentElement.innerHTML = htmlContent;
         }
 
-        // Add this event listener to handle link clicks
-        document.getElementById('content').addEventListener('click', function(event) {
+        // Replace the existing event listener with this one
+        document.addEventListener('click', function(event) {
             const link = event.target.closest('a[href^="#"]');
-            if (link) {
+            if (link && link.closest('#content')) {
                 event.preventDefault();
                 const fragment = link.getAttribute('href').substring(1);
                 window.location.hash = fragment;
